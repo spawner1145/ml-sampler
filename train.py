@@ -50,7 +50,6 @@ class AdvancedSamplerNet_v2(nn.Module):
         output = self.output_conv(d2 + sigma_embedding)
         return x + output
 
-# --- 指数移动平均 (EMA) 工具类 ---
 class EMA:
     def __init__(self, model, decay):
         self.model = model
@@ -82,7 +81,6 @@ class EMA:
                 param.data = self.backup[name]
         self.backup = {}
 
-# --- 数据集类 ---
 class SamplerDataset(Dataset):
     def __init__(self, data_dir="sampler_data", noise_level=0.005):
         self.file_paths = glob.glob(os.path.join(data_dir, "run_*", "step_*.pt"))
@@ -112,7 +110,6 @@ class SamplerDataset(Dataset):
             'target_x': target_x
         }
 
-# --- 训练主函数 ---
 def train(
     data_dir="sampler_data",
     epochs=100,
@@ -147,7 +144,7 @@ def train(
     loss_fn_lpips = lpips.LPIPS(net='vgg').to(device).eval()
 
     best_val_loss = float('inf')
-    logging.info(f"🚀 训练开始！总共 {epochs} 个 Epochs, {len(train_loader)} 步/Epoch。")
+    logging.info(f"训练开始！总共 {epochs} 个 Epochs, {len(train_loader)} 步/Epoch")
 
     for epoch in range(epochs):
         model.train()
@@ -177,9 +174,8 @@ def train(
 
             pbar.set_postfix(loss=f"{total_loss.item():.4f}", l1=f"{l1_loss.item():.4f}", lpips=f"{lpips_loss.item():.4f}")
 
-        # --- 验证循环 ---
         model.eval()
-        ema.apply_shadow() # 使用EMA权重进行验证
+        ema.apply_shadow()
         val_loss = 0
         with torch.no_grad():
             for batch in val_loader:
@@ -193,7 +189,7 @@ def train(
                     predicted_x = model(input_x, denoised, sigma_curr, sigma_next)
                     val_loss += loss_fn_l1(predicted_x, target_x).item()
         
-        ema.restore() # 恢复原始权重以继续训练
+        ema.restore()
         
         avg_val_loss = val_loss / len(val_loader)
         logging.info(f"Epoch {epoch+1} | 平均验证L1损失: {avg_val_loss:.6f}")
@@ -203,7 +199,7 @@ def train(
             ema.apply_shadow()
             torch.save(model.state_dict(), model_save_path)
             ema.restore()
-            logging.info(f"🎉 新的最佳模型已保存到: {model_save_path} (验证损失: {best_val_loss:.6f})")
+            logging.info(f"新的最佳模型已保存到: {model_save_path} (验证损失: {best_val_loss:.6f})")
 
 if __name__ == "__main__":
     train()
