@@ -1,5 +1,3 @@
-# 2_train_precision_sampler.py
-
 import os
 import glob
 import torch
@@ -9,15 +7,12 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
-import lpips  # 用于感知损失
+import lpips
 import random
 import logging
 
-# --- 设置日志 ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# --- 模型定义: AdvancedSamplerNet_v2 ---
-# 这个高效的U-Net结构是我们的目标模型
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
